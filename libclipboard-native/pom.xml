@@ -1,0 +1,283 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>jnr-libclipboard</groupId>
+    <artifactId>jnr-libclipboard</artifactId>
+    <version>${revision}</version>
+  </parent>
+  <artifactId>libclipboard-native</artifactId>
+  <packaging>jar</packaging>
+  <properties>
+    <classifier>${platform}</classifier>
+    <download.cmake>true</download.cmake>
+    <cmake.options>-Ddummy=dummy</cmake.options> <!-- not null -->
+  </properties>
+  <build>
+    <directory>${basedir}/target/${platform}-${build.type}</directory>
+    <sourceDirectory>libclipboard</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>com.googlecode.cmake-maven-project</groupId>
+        <artifactId>cmake-maven-plugin</artifactId>
+        <version>3.7.2-b1</version>
+        <executions>
+          <execution>
+            <id>cmake-generate</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <sourcePath>
+                <!-- The directory containing CMakeLists -->
+                ${project.build.directory}/sources
+              </sourcePath>
+              <targetPath>
+                <!-- The directory write the project files to -->
+                ${project.build.directory}/cmake
+              </targetPath>
+              <generator>
+                <!-- One of the generators defined at https://cmake.org/cmake/help/v3.7/manual/cmake-generators.7.html -->
+                ${cmake.generator}
+              </generator>
+              <classifier>
+                <!-- The classifier of the current platform. One of [windows-x86_32, windows-x86_64, linux-x86_32, linux-x86_64, linux-arm_32, mac-x86_64]. -->
+                ${cmake.classifier}
+              </classifier>
+              <options>
+                <!--
+                  Optional: One or more options found at https://cmake.org/cmake/help/v3.7/manual/cmake.1.html
+                  For example:
+                <option>-DBUILD_THIRDPARTY:bool=on</option>
+                -->
+                <option>-DBUILD_SHARED_LIBS=ON</option>
+                <option>${cmake.options}</option>
+              </options>
+              <environmentVariables>
+                <CMAKE_CLASSIFIER>${cmake.classifier}</CMAKE_CLASSIFIER>
+              </environmentVariables>
+              <downloadBinaries>${download.cmake}</downloadBinaries>
+            </configuration>
+          </execution>
+          <execution>
+            <id>cmake-compile</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <config>
+                <!-- Optional: the build configuration (e.g. "Release|x64") -->
+              </config>
+              <target>
+                <!-- Optional: the build "target" -->
+              </target>
+              <projectDirectory>
+                <!-- "targetPath" from the "generate" goal -->
+                ${project.build.directory}/cmake
+              </projectDirectory>
+              <classifier>
+                <!-- The classifier of the current platform. One of [windows-x86_32, windows-x86_64, linux-x86_32, linux-x86_64, linux-arm_32, mac-x86_64]. -->
+                ${cmake.classifier}
+              </classifier>
+              <config>${cmake.config}</config>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+            <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>copy-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/sources</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.build.sourceDirectory}</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>
+                      com.googlecode.cmake-maven-project
+                    </groupId>
+                    <artifactId>cmake-maven-plugin</artifactId>
+                    <versionRange>[3.7.2-b1,)</versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                      <goal>generate</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <profiles>
+    <profile>
+      <id>list-profiles</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>validate</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <tasks>
+                    <echo>Please pick one of the following profiles:</echo>
+                    <echo>* windows-i386</echo>
+                    <echo>* windows-amd64</echo>
+                    <echo>* linux-i386</echo>
+                    <echo>* linux-amd64</echo>
+                    <echo/>
+                    <echo>For instance: mvn -Pwindows-i386 install</echo>
+                    <fail/>
+                  </tasks>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>windows-i386</id>
+      <activation>
+        <os>
+          <family>windows</family>
+          <arch>x86</arch>
+        </os>
+      </activation>
+      <properties>
+        <platform>windows-i386</platform>
+        <build.type>release</build.type>
+        <cmake.classifier>windows-x86_32</cmake.classifier>
+        <cmake.generator>Visual Studio 15 2017</cmake.generator>
+        <cmake.config>${build.type}</cmake.config>
+        <!--
+        CMake interprets the lack of a generator architecture ("-A<platform>") as x86. There doesn't
+        seem to be any other way to specify it.
+        -->
+      </properties>
+    </profile>
+    <profile>
+      <id>windows-amd64</id>
+      <activation>
+        <os>
+          <family>windows</family>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <platform>windows-amd64</platform>
+        <build.type>release</build.type>
+        <cmake.classifier>windows-x86_64</cmake.classifier>
+        <cmake.generator>Visual Studio 15 2017</cmake.generator>
+        <cmake.options>-Ax64</cmake.options>
+        <cmake.config>${build.type}</cmake.config>
+      </properties>
+    </profile>
+    <profile>
+      <id>linux-i386</id>
+      <activation>
+        <os>
+          <family>linux</family>
+          <arch>i386</arch>
+        </os>
+      </activation>
+      <properties>
+        <platform>linux-i386</platform>
+        <build.type>release</build.type>
+        <cmake.classifier>linux-x86_32</cmake.classifier>
+        <cmake.generator>Unix Makefiles</cmake.generator>
+        <download.cmake>false</download.cmake>
+      </properties>
+    </profile>
+    <profile>
+      <id>linux-amd64</id>
+      <activation>
+        <os>
+          <family>linux</family>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <platform>linux-amd64</platform>
+        <build.type>release</build.type>
+        <cmake.classifier>linux-x86_64</cmake.classifier>
+        <cmake.generator>Unix Makefiles</cmake.generator>
+      </properties>
+    </profile>
+    <profile>
+      <id>portable</id>
+      <!--
+      Sonatype requires a main jar, even for platform-specific artifacts, so we supply it with an
+      empty file.
+      -->
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.googlecode.cmake-maven-project</groupId>
+            <artifactId>cmake-maven-plugin</artifactId>
+            <version>3.7.2-b1</version>
+            <executions>
+              <execution>
+                <id>cmake-generate</id>
+                <phase>none</phase>
+              </execution>
+              <execution>
+                <id>cmake-compile</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <platform>portable</platform>
+        <build.type>release</build.type>
+        <classifier/>
+      </properties>
+    </profile>
+  </profiles>
+</project>

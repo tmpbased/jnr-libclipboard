@@ -1,0 +1,3 @@
+[submodule "libclipboard-native/libclipboard"]
+	path = libclipboard-native/libclipboard
+	url = https://github.com/jtanx/libclipboard.git
